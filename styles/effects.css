@@ -1,0 +1,103 @@
+/* ==========================================================================
+   ქართული ვიზუალური ნოველების პორტალი - Special Effects & Animations
+   ========================================================================== */
+
+/* Neon Text Glow */
+.neon-glow-pink {
+  text-shadow: 0 0 10px rgba(255, 107, 157, 0.7), 0 0 20px rgba(255, 107, 157, 0.4);
+}
+
+.neon-glow-cyan {
+  text-shadow: 0 0 10px rgba(0, 242, 254, 0.7), 0 0 20px rgba(0, 242, 254, 0.4);
+}
+
+/* Floating animation for hero decorative elements */
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+}
+
+.floating {
+  animation: floatSlow 6s ease-in-out infinite;
+}
+
+/* Card shimmer overlay */
+.novel-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  pointer-events: none;
+  transition: 0.75s;
+  z-index: 5;
+}
+
+.novel-card:hover::before {
+  left: 150%;
+}
+
+/* Custom Scrollbar for modern visual novel aesthetic */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090a12;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 107, 157, 0.3);
+  border-radius: 6px;
+  border: 2px solid #090a12;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 107, 157, 0.6);
+}
+
+/* Ripple effect on buttons */
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn .ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: rippleAnimation 0.6s linear;
+  background-color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+
+@keyframes rippleAnimation {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Form success celebration pulse */
+@keyframes formSuccessPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); box-shadow: 0 0 30px rgba(16, 185, 129, 0.4); }
+  100% { transform: scale(1); }
+}
+
+.form-success-animation {
+  animation: formSuccessPulse 0.8s ease-out;
+}
