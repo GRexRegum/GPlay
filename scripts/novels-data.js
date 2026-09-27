@@ -1,8 +1,6 @@
 /**
  * ქართული ვიზუალური ნოველების მონაცემთა ბაზა
  * Visual Novels Database (Georgian Translation Portal)
- * 
- * შეგიძლიათ მარტივად დაამატოთ, წაშალოთ ან შეცვალოთ ნოველების ინფორმაცია.
  */
 
 const NOVELS_DATA = [
@@ -64,7 +62,7 @@ const NOVELS_DATA = [
       graphics: 100,
       testing: 100
     },
-    genres: ["ფსიქოლოგიური საშინელებათა", "რომანტიკა", "დრამა", "მისტიკა"],
+    genres: ["ფსიქოლოგიური", "საშინელებათა", "რომანტიკა", "დრამა", "მისტიკა"],
     rating: "9.6 / 10",
     playtime: "5 - 10 საათი",
     releaseYear: "2017",
@@ -129,26 +127,67 @@ const NOVELS_DATA = [
       { title: "ჩაის ცერემონია ლილისთან", caption: "წყნარი და გულისამაჩუყებელი საუბრები" }
     ]
   },
+  {
+    id: "fate-stay-night",
+    titleGeo: "ფეით / სტეი ნაით",
+    titleOrig: "Fate/stay night (フェイト/ステイナイト)",
+    coverGradient: "linear-gradient(135deg, #1e3a8a, #312e81, #581c87)",
+    coverBadge: "დაგეგმილი პროექტი",
+    status: "planned",
+    statusGeo: "დაგეგმილი",
+    badgeColor: "status-planned",
+    progress: 0,
+    progressDetails: {
+      script: 0,
+      ui: 0,
+      graphics: 0,
+      testing: 0
+    },
+    genres: ["მისტიკა", "ფენტეზი", "დრამა", "ფსიქოლოგიური"],
+    rating: "9.7 / 10",
+    playtime: "60+ საათი",
+    releaseYear: "2004 / 2012",
+    developer: "TYPE-MOON",
+    translators: "GeoVN გუნდი",
+    tags: ["დაგეგმილი", "ლეგენდარული", "ფენტეზი"],
+    shortDesc: "წმინდა გრაალის მეხუთე ომი ფუიუკიში იწყება. შირო ემიას წინაშე იდუმალი მეომარი - სეიბერი წარსდგება.",
+    synopsis: "ფუიუკის ქალაქში ფარულად მიმდინარეობს წმინდა გრაალის ომი — ბრძოლა სიკვდილამდე შვიდ მაგსა და მათ მიერ გამოხმობილ სულებს (მსახურებს) შორის.\n\nახალგაზრდა სკოლის მოსწავლე და მოყვარული მაგი შირო ემია შემთხვევით აღმოჩნდება ამ ომის ეპიცენტრში. სიკვდილის პირას მყოფი შირო ახერხებს ლეგენდარული მეომრის, სეიბერის გამოძახებას.",
+    downloadLinks: [
+      { name: "თარგმანი ჯერ არ დაწყებულა", size: "0 MB", url: "#", type: "info" }
+    ],
+    installGuide: [
+      "პროექტი დაგეგმვის ეტაპზეა. სიახლეებისთვის თვალი ადევნეთ ჩვენს Telegram არხს."
+    ],
+    screenshots: [
+      { title: "სეიბერის გამოძახება", caption: "ლეგენდარული სცენა" }
+    ]
+  }
 ];
 
-// საიტის სტატისტიკა
+// საიტის სტატისტიკის ობიექტი
 const SITE_STATS = {
   totalNovels: NOVELS_DATA.length,
   completedNovels: NOVELS_DATA.filter(n => n.status === "completed").length,
   inProgressNovels: NOVELS_DATA.filter(n => n.status === "in-progress").length,
+  plannedNovels: NOVELS_DATA.filter(n => n.status === "planned").length,
   translatedLines: "185,000+",
-  activeTranslators: "1 ადამიანი"
+  activeTranslators: "GeoVN Team"
 };
 
-// ჟანრების სია ფილტრებისთვის
+// დინამიური ჟანრების სია (ავტომატურად აგროვებს ყველა უნიკალურ ჟანრს ნოველებიდან)
+const extractedGenres = new Set();
+NOVELS_DATA.forEach(n => {
+  if (Array.isArray(n.genres)) {
+    n.genres.forEach(g => extractedGenres.add(g));
+  }
+});
+
 const ALL_GENRES = [
   "ყველა ჟანრი",
-  "რომანტიკა",
-  "მისტიკა",
-  "ფსიქოლოგიური",
-  "სამეცნიერო ფანტასტიკა",
-  "საშინელებათა",
-  "დრამა",
-  "დროში მოგზაურობა",
-  "ცხოვრებისეული"
+  ...Array.from(extractedGenres)
 ];
+
+// Экспорт в глобальный контекст window
+window.NOVELS_DATA = NOVELS_DATA;
+window.SITE_STATS = SITE_STATS;
+window.ALL_GENRES = ALL_GENRES;
