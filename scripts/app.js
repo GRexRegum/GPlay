@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initAudioControls();
   renderStats();
   populateGenreFilter();
-  renderNovels(NOVELS_DATA);
+  renderNovels(typeof NOVELS_DATA !== 'undefined' ? NOVELS_DATA : []);
   setupFiltersAndSearch();
   setupModal();
   setupContactForm();
@@ -16,11 +16,25 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================================================
+// 0. Вспомогательная функция защиты от XSS (Экранирование HTML)
+// ==========================================================================
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// ==========================================================================
 // 1. საკურას ფურცლების ეფექტი
 // ==========================================================================
 let sakuraInstance = null;
 
 function initSakura() {
+  if (typeof SakuraEngine === 'undefined') return;
   sakuraInstance = new SakuraEngine('sakura-canvas');
   
   const toggleBtn = document.getElementById('toggle-sakura-btn');
@@ -28,7 +42,10 @@ function initSakura() {
     toggleBtn.addEventListener('click', () => {
       const active = sakuraInstance.toggle();
       toggleBtn.classList.toggle('active', active);
-      toggleBtn.querySelector('.btn-label').textContent = active ? 'საკურა: ჩართ.' : 'საკურა: გამორთ.';
+      const label = toggleBtn.querySelector('.btn-label');
+      if (label) {
+        label.textContent = active ? 'საკურა: ჩართ.' : 'საკურა: გამორთ.';
+      }
       if (window.soundEngine) window.soundEngine.playClickSound();
     });
   }
@@ -55,15 +72,17 @@ function initAudioControls() {
 // 3. სტატისტიკის ასახვა
 // ==========================================================================
 function renderStats() {
+  if (typeof SITE_STATS === 'undefined') return;
+
   const totalEl = document.getElementById('stat-total');
   const completedEl = document.getElementById('stat-completed');
   const inProgressEl = document.getElementById('stat-progress');
   const linesEl = document.getElementById('stat-lines');
 
-  if (totalEl) totalEl.textContent = SITE_STATS.totalNovels;
-  if (completedEl) completedEl.textContent = SITE_STATS.completedNovels;
-  if (inProgressEl) inProgressEl.textContent = SITE_STATS.inProgressNovels;
-  if (linesEl) linesEl.textContent = SITE_STATS.translatedLines;
+  if (totalEl) totalEl.textContent = SITE_STATS.totalNovels || 0;
+  if (completedEl) completedEl.textContent = SITE_STATS.completedNovels || 0;
+  if (inProgressEl) inProgressEl.textContent = SITE_STATS.inProgressNovels || 0;
+  if (linesEl) linesEl.textContent = SITE_STATS.translatedLines || 0;
 }
 
 // ==========================================================================
@@ -71,7 +90,7 @@ function renderStats() {
 // ==========================================================================
 function populateGenreFilter() {
   const genreSelect = document.getElementById('genre-filter');
-  if (!genreSelect) return;
+  if (!genreSelect || typeof ALL_GENRES === 'undefined') return;
 
   genreSelect.innerHTML = '';
   ALL_GENRES.forEach(genre => {
@@ -83,7 +102,7 @@ function populateGenreFilter() {
 }
 
 // ==========================================================================
-// 5. ნოველების ბარათების რენდერი
+// 5. ნოველების ბარათების რენდერი (Защищено от XSS)
 // ==========================================================================
 let currentFilter = 'all';
 let currentGenre = 'all';
@@ -95,10 +114,10 @@ function renderNovels(novels) {
 
   grid.innerHTML = '';
 
-  if (novels.length === 0) {
+  if (!novels || novels.length === 0) {
     grid.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">🌸</div>
+      <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+        <div class="empty-icon" style="font-size: 2rem; margin-bottom: 12px;">🌸</div>
         <h3 style="font-size: 1.3rem; margin-bottom: 8px;">ნოველა ვერ მოიძებნა</h3>
         <p style="color: var(--text-muted);">სცადეთ სხვა საკვანძო სიტყვა ან გაასუფთავეთ ფილტრი.</p>
       </div>
@@ -111,54 +130,50 @@ function renderNovels(novels) {
     card.className = 'novel-card';
     card.setAttribute('data-id', novel.id);
 
-    // ჟანრების თეგები
-    const genreTagsHtml = novel.genres.slice(0, 3).map(g => `<span class="genre-tag">${g}</span>`).join('');
+    const genres = Array.isArray(novel.genres) ? novel.genres : [];
+    const genreTagsHtml = genres.slice(0, 3).map(g => `<span class="genre-tag">${escapeHtml(g)}</span>`).join('');
+    const progress = Math.min(Math.max(novel.progress || 0, 0), 100);
 
     card.innerHTML = `
-      <div class="card-poster" style="background: ${novel.coverGradient};">
+      <div class="card-poster" style="background: ${escapeHtml(novel.coverGradient || '')};">
         <div class="card-poster-pattern"></div>
-        <div class="status-badge ${novel.badgeColor}">
+        <div class="status-badge ${escapeHtml(novel.badgeColor || '')}">
           <span class="status-dot"></span>
-          ${novel.statusGeo}
+          ${escapeHtml(novel.statusGeo || '')}
         </div>
-        <h3 class="poster-title">${novel.titleGeo}</h3>
+        <h3 class="poster-title">${escapeHtml(novel.titleGeo || '')}</h3>
       </div>
       <div class="card-body">
         <div class="novel-meta-top">
-          <div class="novel-rating">⭐ ${novel.rating}</div>
-          <div class="novel-playtime">⏳ ${novel.playtime}</div>
+          <div class="novel-rating">⭐ ${escapeHtml(novel.rating || 'N/A')}</div>
+          <div class="novel-playtime">⏳ ${escapeHtml(novel.playtime || 'N/A')}</div>
         </div>
-        <h4 class="novel-card-title">${novel.titleGeo}</h4>
-        <div class="novel-orig-title">${novel.titleOrig}</div>
+        <h4 class="novel-card-title">${escapeHtml(novel.titleGeo || '')}</h4>
+        <div class="novel-orig-title">${escapeHtml(novel.titleOrig || '')}</div>
         <div class="novel-genres">
           ${genreTagsHtml}
         </div>
-        <p class="novel-desc-snippet">${novel.shortDesc}</p>
+        <p class="novel-desc-snippet">${escapeHtml(novel.shortDesc || '')}</p>
         
         <div class="progress-container">
           <div class="progress-header">
             <span class="progress-label">თარგმანის პროგრესი</span>
-            <span class="progress-percentage">${novel.progress}%</span>
+            <span class="progress-percentage">${progress}%</span>
           </div>
           <div class="progress-track">
-            <div class="progress-fill" style="width: ${novel.progress}%;"></div>
+            <div class="progress-fill" style="width: ${progress}%;"></div>
           </div>
         </div>
 
         <div class="card-actions">
-          <button class="btn btn-primary btn-card open-detail-btn" data-id="${novel.id}">
+          <button class="btn btn-primary btn-card open-detail-btn">
             დეტალურად / ჩამოტვირთვა
           </button>
         </div>
       </div>
     `;
 
-    // ბარათის კლიკი
-    card.querySelector('.open-detail-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      openNovelModal(novel.id);
-    });
-
+    // Безопасный клик по всей карточке
     card.addEventListener('click', () => {
       openNovelModal(novel.id);
     });
@@ -175,18 +190,16 @@ function setupFiltersAndSearch() {
   const searchInput = document.getElementById('search-input');
   const genreSelect = document.getElementById('genre-filter');
 
-  // სტატუსის ტაბები
   statusTabs.forEach(tab => {
     tab.addEventListener('click', () => {
       statusTabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      currentFilter = tab.getAttribute('data-status');
+      currentFilter = tab.getAttribute('data-status') || 'all';
       if (window.soundEngine) window.soundEngine.playClickSound();
       applyFilters();
     });
   });
 
-  // ჟანრის არჩევა
   if (genreSelect) {
     genreSelect.addEventListener('change', (e) => {
       currentGenre = e.target.value;
@@ -195,7 +208,6 @@ function setupFiltersAndSearch() {
     });
   }
 
-  // ძებნა
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       currentSearch = e.target.value.toLowerCase().trim();
@@ -205,23 +217,23 @@ function setupFiltersAndSearch() {
 }
 
 function applyFilters() {
+  if (typeof NOVELS_DATA === 'undefined') return;
+
   const filtered = NOVELS_DATA.filter(novel => {
-    // სტატუსის ფილტრი
     if (currentFilter !== 'all' && novel.status !== currentFilter) {
       return false;
     }
 
-    // ჟანრის ფილტრი
-    if (currentGenre !== 'all' && !novel.genres.includes(currentGenre)) {
+    const genres = Array.isArray(novel.genres) ? novel.genres : [];
+    if (currentGenre !== 'all' && !genres.includes(currentGenre)) {
       return false;
     }
 
-    // ძებნის ტექსტი (სათაური, ორიგინალი სახელი, ჟანრი, ავტორი)
     if (currentSearch) {
-      const matchGeo = novel.titleGeo.toLowerCase().includes(currentSearch);
-      const matchOrig = novel.titleOrig.toLowerCase().includes(currentSearch);
-      const matchDev = novel.developer.toLowerCase().includes(currentSearch);
-      const matchGenre = novel.genres.some(g => g.toLowerCase().includes(currentSearch));
+      const matchGeo = (novel.titleGeo || '').toLowerCase().includes(currentSearch);
+      const matchOrig = (novel.titleOrig || '').toLowerCase().includes(currentSearch);
+      const matchDev = (novel.developer || '').toLowerCase().includes(currentSearch);
+      const matchGenre = genres.some(g => g.toLowerCase().includes(currentSearch));
       if (!matchGeo && !matchOrig && !matchDev && !matchGenre) {
         return false;
       }
@@ -234,7 +246,7 @@ function applyFilters() {
 }
 
 // ==========================================================================
-// 7. დეტალური მოდალური ფანჯარა
+// 7. დეტალური მოდალური ფანჯარა (Защищено от Inline-XSS)
 // ==========================================================================
 function setupModal() {
   const modalOverlay = document.getElementById('novel-modal');
@@ -260,6 +272,8 @@ function setupModal() {
 }
 
 function openNovelModal(novelId) {
+  if (typeof NOVELS_DATA === 'undefined') return;
+
   const novel = NOVELS_DATA.find(n => n.id === novelId);
   if (!novel) return;
 
@@ -277,114 +291,139 @@ function openNovelModal(novelId) {
   const downloadsList = document.getElementById('modal-downloads-list');
   const installGuideList = document.getElementById('modal-install-guide');
 
-  // ბანერი და სათაურები
-  banner.style.background = novel.coverGradient;
-  title.textContent = novel.titleGeo;
-  origTitle.textContent = novel.titleOrig;
+  // Банер и заголовки
+  if (banner) banner.style.background = novel.coverGradient || '';
+  if (title) title.textContent = novel.titleGeo || '';
+  if (origTitle) origTitle.textContent = novel.titleOrig || '';
   
-  // სტატუსი
-  statusBadge.className = `status-badge ${novel.badgeColor}`;
-  statusBadge.innerHTML = `<span class="status-dot"></span> ${novel.statusGeo}`;
+  // Статус
+  if (statusBadge) {
+    statusBadge.className = `status-badge ${escapeHtml(novel.badgeColor || '')}`;
+    statusBadge.innerHTML = `<span class="status-dot"></span> ${escapeHtml(novel.statusGeo || '')}`;
+  }
 
-  // მეტა ინფორმაცია
-  metaGrid.innerHTML = `
-    <div class="modal-meta-box">
-      <span class="meta-label">შემქმნელი</span>
-      <span class="meta-val">${novel.developer}</span>
-    </div>
-    <div class="modal-meta-box">
-      <span class="meta-label">გამოშვების წელი</span>
-      <span class="meta-val">${novel.releaseYear}</span>
-    </div>
-    <div class="modal-meta-box">
-      <span class="meta-label">ხანგრძლივობა</span>
-      <span class="meta-val">${novel.playtime}</span>
-    </div>
-    <div class="modal-meta-box">
-      <span class="meta-label">მთარგმნელი</span>
-      <span class="meta-val">${novel.translators}</span>
-    </div>
-  `;
-
-  // პროგრესის დეტალები
-  breakdownGrid.innerHTML = `
-    <div class="breakdown-item">
-      <div class="progress-header">
-        <span class="progress-label">სცენარი / დიალოგები</span>
-        <span class="progress-percentage">${novel.progressDetails.script}%</span>
+  // Мета
+  if (metaGrid) {
+    metaGrid.innerHTML = `
+      <div class="modal-meta-box">
+        <span class="meta-label">შემქმნელი</span>
+        <span class="meta-val">${escapeHtml(novel.developer || 'N/A')}</span>
       </div>
-      <div class="progress-track"><div class="progress-fill" style="width: ${novel.progressDetails.script}%;"></div></div>
-    </div>
-    <div class="breakdown-item">
-      <div class="progress-header">
-        <span class="progress-label">ინტერფეისი / მენიუ</span>
-        <span class="progress-percentage">${novel.progressDetails.ui}%</span>
+      <div class="modal-meta-box">
+        <span class="meta-label">გამოშვების წელი</span>
+        <span class="meta-val">${escapeHtml(novel.releaseYear || 'N/A')}</span>
       </div>
-      <div class="progress-track"><div class="progress-fill" style="width: ${novel.progressDetails.ui}%;"></div></div>
-    </div>
-    <div class="breakdown-item">
-      <div class="progress-header">
-        <span class="progress-label">გრაფიკა და გამოსახულებები</span>
-        <span class="progress-percentage">${novel.progressDetails.graphics}%</span>
+      <div class="modal-meta-box">
+        <span class="meta-label">ხანგრძლივობა</span>
+        <span class="meta-val">${escapeHtml(novel.playtime || 'N/A')}</span>
       </div>
-      <div class="progress-track"><div class="progress-fill" style="width: ${novel.progressDetails.graphics}%;"></div></div>
-    </div>
-    <div class="breakdown-item">
-      <div class="progress-header">
-        <span class="progress-label">ტესტირება და კორექტურა</span>
-        <span class="progress-percentage">${novel.progressDetails.testing}%</span>
+      <div class="modal-meta-box">
+        <span class="meta-label">მთარგმნელი</span>
+        <span class="meta-val">${escapeHtml(novel.translators || 'N/A')}</span>
       </div>
-      <div class="progress-track"><div class="progress-fill" style="width: ${novel.progressDetails.testing}%;"></div></div>
-    </div>
-  `;
-
-  // სინოფსისი
-  synopsis.textContent = novel.synopsis;
-
-  // სქრინშოთების გალერეა
-  screenshotsBox.innerHTML = '';
-  novel.screenshots.forEach(sc => {
-    const item = document.createElement('div');
-    item.className = 'screenshot-item';
-    item.innerHTML = `
-      <div class="screenshot-preview">🖼️</div>
-      <div class="screenshot-title">${sc.title}</div>
-      <div class="screenshot-caption">${sc.caption}</div>
     `;
-    screenshotsBox.appendChild(item);
-  });
+  }
 
-  // გადმოწერის ბმულები
-  downloadsList.innerHTML = '';
-  novel.downloadLinks.forEach(link => {
-    const card = document.createElement('div');
-    card.className = 'download-card';
-    card.innerHTML = `
-      <div class="download-info">
-        <div class="download-icon">⬇️</div>
-        <div>
-          <div class="download-name">${link.name}</div>
-          <div class="download-size">ზომა: ${link.size}</div>
+  // Прогресс
+  const p = novel.progressDetails || {};
+  if (breakdownGrid) {
+    breakdownGrid.innerHTML = `
+      <div class="breakdown-item">
+        <div class="progress-header">
+          <span class="progress-label">სცენარი / დიალოგები</span>
+          <span class="progress-percentage">${p.script || 0}%</span>
         </div>
+        <div class="progress-track"><div class="progress-fill" style="width: ${p.script || 0}%;"></div></div>
       </div>
-      <a href="${link.url}" class="btn btn-primary" style="padding: 8px 18px; font-size: 0.85rem;" onclick="handleDownloadClick(event, '${novel.titleGeo}')">
-        ჩამოტვირთვა
-      </a>
+      <div class="breakdown-item">
+        <div class="progress-header">
+          <span class="progress-label">ინტერფეისი / მენიუ</span>
+          <span class="progress-percentage">${p.ui || 0}%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width: ${p.ui || 0}%;"></div></div>
+      </div>
+      <div class="breakdown-item">
+        <div class="progress-header">
+          <span class="progress-label">გრაფიკა და გამოსახულებები</span>
+          <span class="progress-percentage">${p.graphics || 0}%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width: ${p.graphics || 0}%;"></div></div>
+      </div>
+      <div class="breakdown-item">
+        <div class="progress-header">
+          <span class="progress-label">ტესტირება და კორექტურა</span>
+          <span class="progress-percentage">${p.testing || 0}%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width: ${p.testing || 0}%;"></div></div>
+      </div>
     `;
-    downloadsList.appendChild(card);
-  });
+  }
 
-  // ინსტალაციის გზამკვლევი
-  installGuideList.innerHTML = '';
-  novel.installGuide.forEach(step => {
-    const li = document.createElement('li');
-    li.className = 'guide-step';
-    li.textContent = step;
-    installGuideList.appendChild(li);
-  });
+  // Синопсис (Безопасно через textContent)
+  if (synopsis) synopsis.textContent = novel.synopsis || '';
 
-  modal.classList.add('active');
-  document.body.style.overflow = 'hidden';
+  // Скриншоты
+  if (screenshotsBox) {
+    screenshotsBox.innerHTML = '';
+    (novel.screenshots || []).forEach(sc => {
+      const item = document.createElement('div');
+      item.className = 'screenshot-item';
+      item.innerHTML = `
+        <div class="screenshot-preview">🖼️</div>
+        <div class="screenshot-title">${escapeHtml(sc.title || '')}</div>
+        <div class="screenshot-caption">${escapeHtml(sc.caption || '')}</div>
+      `;
+      screenshotsBox.appendChild(item);
+    });
+  }
+
+  // Ссылки на скачивание (Чистая обработка через JS-события)
+  if (downloadsList) {
+    downloadsList.innerHTML = '';
+    (novel.downloadLinks || []).forEach(link => {
+      const card = document.createElement('div');
+      card.className = 'download-card';
+      card.innerHTML = `
+        <div class="download-info">
+          <div class="download-icon">⬇️</div>
+          <div>
+            <div class="download-name">${escapeHtml(link.name || 'ფაილი')}</div>
+            <div class="download-size">ზომა: ${escapeHtml(link.size || 'N/A')}</div>
+          </div>
+        </div>
+        <a href="${escapeHtml(link.url || '#')}" class="btn btn-primary download-action-btn" style="padding: 8px 18px; font-size: 0.85rem;">
+          ჩამოტვირთვა
+        </a>
+      `;
+
+      const downloadBtn = card.querySelector('.download-action-btn');
+      if (downloadBtn) {
+        downloadBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          showToast(`ინფორმაცია: "${novel.titleGeo}"-ის პატჩის გადმოწერა მალე დაიწყება.`);
+          if (window.soundEngine) window.soundEngine.playClickSound();
+        });
+      }
+
+      downloadsList.appendChild(card);
+    });
+  }
+
+  // Инструкция установки
+  if (installGuideList) {
+    installGuideList.innerHTML = '';
+    (novel.installGuide || []).forEach(step => {
+      const li = document.createElement('li');
+      li.className = 'guide-step';
+      li.textContent = step;
+      installGuideList.appendChild(li);
+    });
+  }
+
+  if (modal) {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
 }
 
 function closeModal() {
@@ -396,12 +435,6 @@ function closeModal() {
   }
 }
 
-window.handleDownloadClick = function(e, title) {
-  e.preventDefault();
-  showToast(`ინფორმაცია: "${title}"-ის პატჩის გადმოწერა მალე დაიწყება.`);
-  if (window.soundEngine) window.soundEngine.playClickSound();
-};
-
 // ==========================================================================
 // 8. კონტაქტისა და უკუკავშირის ფორმა
 // ==========================================================================
@@ -412,17 +445,21 @@ function setupContactForm() {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    const name = document.getElementById('contact-name').value.trim();
-    const email = document.getElementById('contact-email').value.trim();
-    const subject = document.getElementById('contact-subject').value;
-    const message = document.getElementById('contact-message').value.trim();
+    const nameEl = document.getElementById('contact-name');
+    const emailEl = document.getElementById('contact-email');
+    const subjectEl = document.getElementById('contact-subject');
+    const messageEl = document.getElementById('contact-message');
+
+    const name = nameEl ? nameEl.value.trim() : '';
+    const email = emailEl ? emailEl.value.trim() : '';
+    const subject = subjectEl ? subjectEl.value : 'other';
+    const message = messageEl ? messageEl.value.trim() : '';
 
     if (!name || !email || !message) {
       showToast('გთხოვთ შეავსოთ ყველა სავალდებულო ველი!', 'error');
       return;
     }
 
-    // შეტყობინების ობიექტი
     const newFeedback = {
       name,
       email,
@@ -431,7 +468,6 @@ function setupContactForm() {
       timestamp: new Date().toISOString()
     };
 
-    // შენახვა localStorage-ში მომავალი სანახავად
     try {
       const stored = JSON.parse(localStorage.getItem('geo_vn_messages') || '[]');
       stored.push(newFeedback);
@@ -440,7 +476,6 @@ function setupContactForm() {
       console.warn('Storage error:', err);
     }
 
-    // ხმოვანი და ვიზუალური ეფექტი
     if (window.soundEngine) window.soundEngine.playSuccessSound();
 
     form.classList.add('form-success-animation');
@@ -452,7 +487,7 @@ function setupContactForm() {
 }
 
 // ==========================================================================
-// 9. Toast შეტყობინებები
+// 9. Toast შეტყობინებები (Безопасно через textContent)
 // ==========================================================================
 function showToast(text, type = 'success') {
   let container = document.getElementById('toast-container');
@@ -465,9 +500,15 @@ function showToast(text, type = 'success') {
 
   const toast = document.createElement('div');
   toast.className = 'toast';
-  const icon = type === 'success' ? '🌸' : '⚠️';
-  toast.innerHTML = `<span>${icon}</span> <span>${text}</span>`;
+  
+  const iconSpan = document.createElement('span');
+  iconSpan.textContent = type === 'success' ? '🌸' : '⚠️';
 
+  const textSpan = document.createElement('span');
+  textSpan.textContent = text;
+
+  toast.appendChild(iconSpan);
+  toast.appendChild(textSpan);
   container.appendChild(toast);
 
   setTimeout(() => {
@@ -479,7 +520,7 @@ function showToast(text, type = 'success') {
 }
 
 // ==========================================================================
-// 10. Ripple ეფექტი ღილაკებზე
+// 10. Ripple ეფექტი ღილაკებზე (С автоматической очисткой DOM)
 // ==========================================================================
 function setupRippleEffects() {
   document.addEventListener('click', (e) => {
@@ -496,10 +537,10 @@ function setupRippleEffects() {
     circle.style.top = `${e.clientY - rect.top - radius}px`;
     circle.classList.add('ripple');
 
-    const ripple = btn.getElementsByClassName('ripple')[0];
-    if (ripple) {
-      ripple.remove();
-    }
+    // Автоматическое удаление элемента после завершения анимации
+    circle.addEventListener('animationend', () => {
+      circle.remove();
+    });
 
     btn.appendChild(circle);
   });
