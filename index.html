@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ვიზუალური ნოველები ქართულად | GPlay</title>
   <meta name="description"
-    content="ვიზუალური ნოველები ქართულ ენაზე. თვალყური ადევნეთ თარგმანის პროგრესს და შემოგვირეთდით!">
+    content="ვიზუალური ნოველები ქართულ ენაზე. თვალყური ადევნეთ თარგმანის პროგრესს და შემოგვიერთდით!">
   <meta name="theme-color" content="#090a12">
 
   <!-- Stylesheets -->
@@ -47,13 +47,13 @@
         <div class="nav-controls">
           <!-- Sakura Petals Effect Toggle -->
           <button id="toggle-sakura-btn" class="control-btn active" title="საკურას ფურცლების ეფექტი">
-            <span>🌸</span>
+            <span aria-hidden="true">🌸</span>
             <span class="btn-label">საკურა: ჩართ.</span>
           </button>
 
           <!-- Ambient Music Toggle -->
           <button id="toggle-music-btn" class="control-btn" title="ფონური მუსიკის ჩართვა">
-            <div class="music-wave">
+            <div class="music-wave" aria-hidden="true">
               <span class="music-bar"></span>
               <span class="music-bar"></span>
               <span class="music-bar"></span>
@@ -70,7 +70,7 @@
     <section class="hero">
       <div class="container">
         <div class="hero-badge">
-          <span>✨</span> პირველი ქართულენოვანი VN პორტალი
+          <span aria-hidden="true">✨</span> პირველი ქართულენოვანი VN პორტალი
         </div>
 
         <h1 class="hero-title">
@@ -84,10 +84,10 @@
 
         <div class="hero-actions">
           <a href="#catalog" class="btn btn-primary">
-            <span>📖</span> ნოველების კატალოგი
+            <span aria-hidden="true">📖</span> ნოველების კატალოგი
           </a>
           <a href="#contact" class="btn btn-secondary">
-            <span>✉️</span> შემოგვიერთდით გუნდში
+            <span aria-hidden="true">✉️</span> შემოგვიერთდით გუნდში
           </a>
         </div>
 
@@ -134,7 +134,7 @@
 
           <div class="filter-search-group">
             <div class="search-box">
-              <span class="search-icon">🔍</span>
+              <span class="search-icon" aria-hidden="true">🔍</span>
               <input type="text" id="search-input" placeholder="მოძებნეთ ნოველა, ავტორი...">
             </div>
             <select id="genre-filter" class="genre-select">
@@ -143,9 +143,11 @@
           </div>
         </div>
 
-        <!-- Dynamic Novels Grid -->
+        <!-- Dynamic Novels Grid with Fallback Loading State -->
         <div id="novels-grid" class="novels-grid">
-          <!-- Javascript-ით ჩაიტვირთება -->
+          <div class="loading-state" style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">
+            იტვირთება ნოველები...
+          </div>
         </div>
       </div>
     </section>
@@ -174,28 +176,28 @@
 
               <div class="features-list">
                 <div class="feature-box">
-                  <div class="feature-icon">✨</div>
+                  <div class="feature-icon" aria-hidden="true">✨</div>
                   <div>
                     <h4>ხარისხიანი ლოკალიზაცია</h4>
                     <p>ტექსტის, გრაფიკისა და შრიფტების სრული ქართული ადაპტაცია.</p>
                   </div>
                 </div>
                 <div class="feature-box">
-                  <div class="feature-icon">🎁</div>
+                  <div class="feature-icon" aria-hidden="true">🎁</div>
                   <div>
                     <h4>სრულიად უფასო</h4>
                     <p>ყველა თარგმანი ვრცელდება უფასოდ ქართული საზოგადოებისთვის.</p>
                   </div>
                 </div>
                 <div class="feature-box">
-                  <div class="feature-icon">⚡</div>
+                  <div class="feature-icon" aria-hidden="true">⚡</div>
                   <div>
                     <h4>მარტივი ინსტალაცია</h4>
                     <p>დეტალური გზამკვლევი ნებისმიერი პლატფორმისთვის.</p>
                   </div>
                 </div>
                 <div class="feature-box">
-                  <div class="feature-icon">👥</div>
+                  <div class="feature-icon" aria-hidden="true">👥</div>
                   <div>
                     <h4>ღია საზოგადოება</h4>
                     <p>ნებისმიერ მსურველს შეუძლია შემოგვიერთდეს თარგმნაში ან რედაქტირებაში.</p>
@@ -205,7 +207,7 @@
             </div>
 
             <div class="about-card-badge">
-              <div style="font-size: 48px; margin-bottom: 16px;">⛩️</div>
+              <div style="font-size: 48px; margin-bottom: 16px;" aria-hidden="true">⛩️</div>
               <blockquote class="about-quote">
                 „ენა არის კულტურის გასაღები. როდესაც ვიზუალური ნოველა ქართულად საუბრობს, ის ჩვენი სამყაროს ნაწილი
                 ხდება.“
@@ -238,8 +240,8 @@
             </p>
 
             <div class="social-links-grid">
-              <a href="#" class="social-card" title="Telegram Channel">
-                <span class="social-icon">✈️</span>
+              <a href="https://t.me/your_telegram_channel" target="_blank" rel="noopener noreferrer" class="social-card" title="Telegram Channel">
+                <span class="social-icon" aria-hidden="true">✈️</span>
                 <div>
                   <div class="social-title">Telegram</div>
                   <div class="social-sub">სიახლეები & რელიზები</div>
@@ -295,7 +297,7 @@
       <div class="container">
         <div class="footer-content">
           <div class="footer-brand">
-            <div class="brand-icon" style="width: 32px; height: 32px; font-size: 16px;"></div>
+            <div class="brand-icon" style="width: 32px; height: 32px; font-size: 16px;" aria-hidden="true"></div>
             <div>
               <div style="font-weight: 700; color: #fff;">GPlay</div>
               <div class="footer-tagline">ქართული ვიზუალური ნოველების თარგმნის პორტალი</div>
@@ -322,7 +324,7 @@
        ==================================================================== -->
   <div id="novel-modal" class="modal-overlay" role="dialog" aria-modal="true">
     <div class="modal-content">
-      <button id="modal-close-btn" class="modal-close-btn" title="დახურვა">✕</button>
+      <button id="modal-close-btn" class="modal-close-btn" title="დახურვა" aria-label="დახურვა">✕</button>
 
       <!-- Top Banner -->
       <div id="modal-banner" class="modal-header-banner">
@@ -342,27 +344,27 @@
         <!-- Translation Progress Breakdown -->
         <div class="progress-breakdown">
           <div class="breakdown-title">
-            <span>📊</span> თარგმანის დეტალური პროგრესი
+            <span aria-hidden="true">📊</span> თარგმანის დეტალური პროგრესი
           </div>
           <div id="modal-breakdown-grid" class="breakdown-grid"></div>
         </div>
 
         <!-- Synopsis -->
         <div class="modal-section-title">
-          <span>📜</span> სიუჟეტის აღწერა
+          <span aria-hidden="true">📜</span> სიუჟეტის აღწერა
         </div>
         <div id="modal-synopsis" class="modal-synopsis"></div>
 
         <!-- Screenshots Gallery -->
         <div class="modal-section-title">
-          <span>🖼️</span> გალერეა და სქრინშოთები
+          <span aria-hidden="true">🖼️</span> გალერეა და სქრინშოთები
         </div>
         <div id="modal-screenshots" class="screenshots-gallery"></div>
 
         <!-- Downloads -->
         <div class="downloads-section">
           <div class="modal-section-title" style="margin-bottom: 6px;">
-            <span>💾</span> ჩამოტვირთვის ბმულები
+            <span aria-hidden="true">💾</span> ჩამოტვირთვის ბმულები
           </div>
           <p style="font-size: 0.85rem; color: var(--text-muted);">
             აირჩიეთ სასურველი სერვერი პატჩის ან სრული ვერსიის გადმოსაწერად:
@@ -373,7 +375,7 @@
         <!-- Install Guide -->
         <div class="install-guide">
           <div class="modal-section-title" style="margin-bottom: 4px;">
-            <span>⚙️</span> როგორ დავაყენოთ ქართული პატჩი?
+            <span aria-hidden="true">⚙️</span> როგორ დავაყენოთ ქართული პატჩი?
           </div>
           <ol id="modal-install-guide" class="guide-steps"></ol>
         </div>
