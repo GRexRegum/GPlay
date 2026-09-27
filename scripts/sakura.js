@@ -1,6 +1,5 @@
 /**
- * საკურას ფურცლებისა და ნაწილაკების Canvas ეფექტის ძრავი
- * Sakura Petals & Stardust Canvas Engine
+ * ქართული ვიზუალური ნოველების პორტალი - Sakura Petals & Stardust Canvas Engine
  */
 
 class SakuraEngine {
@@ -15,15 +14,22 @@ class SakuraEngine {
     this.maxSparkles = 25;
     this.animationId = null;
     this.isEnabled = true;
+    this.dpr = window.devicePixelRatio || 1;
     
     this.mouse = { x: -1000, y: -1000, radius: 100 };
+    this.resizeTimeout = null;
     
     this.init();
   }
 
   init() {
     this.resize();
-    window.addEventListener('resize', () => this.resize());
+
+    // Оптимизированный resize с дебаунсом
+    window.addEventListener('resize', () => {
+      clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = setTimeout(() => this.resize(), 100);
+    });
     
     window.addEventListener('mousemove', (e) => {
       this.mouse.x = e.clientX;
@@ -43,12 +49,12 @@ class SakuraEngine {
       }
     });
 
-    // ფურცლების ინიციალიზაცია
+    // Инициализация лепестков
     for (let i = 0; i < this.maxPetals; i++) {
       this.petals.push(this.createPetal(true));
     }
 
-    // ვარსკვლავური ნაპერწკლების ინიციალიზაცია
+    // Инициализация блесток
     for (let i = 0; i < this.maxSparkles; i++) {
       this.sparkles.push(this.createSparkle(true));
     }
@@ -56,9 +62,18 @@ class SakuraEngine {
     this.start();
   }
 
+  // Поддержка четких Retina / High-DPI экранов
   resize() {
-    this.width = this.canvas.width = window.innerWidth;
-    this.height = this.canvas.height = window.innerHeight;
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
+    this.dpr = window.devicePixelRatio || 1;
+
+    this.canvas.width = this.width * this.dpr;
+    this.canvas.height = this.height * this.dpr;
+    this.canvas.style.width = `${this.width}px`;
+    this.canvas.style.height = `${this.height}px`;
+
+    this.ctx.scale(this.dpr, this.dpr);
   }
 
   createPetal(randomY = false) {
@@ -92,7 +107,7 @@ class SakuraEngine {
   }
 
   update() {
-    // განვაახლოთ ფურცლები
+    // Обновляем лепестки
     for (let i = 0; i < this.petals.length; i++) {
       const p = this.petals[i];
       p.wobble += p.wobbleSpeed;
@@ -101,23 +116,24 @@ class SakuraEngine {
       p.x += p.speedX + Math.sin(p.wobble) * 1.2;
       p.y += p.speedY;
 
-      // მაუსთან ინტერაქცია (ფურცლები ნაზად შორდებიან კურსორს)
+      // Отталкивание от мыши (Защищено от NaN / деления на ноль)
       const dx = p.x - this.mouse.x;
       const dy = p.y - this.mouse.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < this.mouse.radius) {
+
+      if (dist < this.mouse.radius && dist > 0.1) {
         const force = (1 - dist / this.mouse.radius) * 3;
         p.x += (dx / dist) * force;
         p.y += (dy / dist) * force;
       }
 
-      // ეკრანიდან გასვლისას დაბრუნება
+      // Пересоздание при выходе за границы
       if (p.y > this.height + 20 || p.x > this.width + 20 || p.x < -20) {
         this.petals[i] = this.createPetal(false);
       }
     }
 
-    // განვაახლოთ ნაპერწკლები
+    // Обновляем блестки
     for (let i = 0; i < this.sparkles.length; i++) {
       const s = this.sparkles[i];
       s.pulse += s.pulseSpeed;
@@ -132,28 +148,28 @@ class SakuraEngine {
   draw() {
     this.ctx.clearRect(0, 0, this.width, this.height);
 
-    // დავხატოთ ნაპერწკლები (ფონის ვარსკვლავები)
+    // Рисуем блестки (Фоновые звездочки)
     for (let s of this.sparkles) {
       const op = Math.sin(s.pulse) * 0.3 + s.opacity;
       this.ctx.save();
       this.ctx.beginPath();
       this.ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
       this.ctx.fillStyle = `rgba(147, 197, 253, ${Math.max(0, op)})`;
-      this.ctx.shadowColor = '#60a5fa';
-      this.ctx.shadowBlur = 8;
       this.ctx.fill();
       this.ctx.restore();
     }
 
-    // დავხატოთ საკურას ფურცლები
+    // Рисуем лепестки сакуры
     for (let p of this.petals) {
       this.ctx.save();
       this.ctx.translate(p.x, p.y);
       this.ctx.rotate((p.rotation * Math.PI) / 180);
-      this.ctx.scale(Math.cos(p.wobble), 1); // 3D გადატრიალების იმიტაცია
+      
+      // Защита от нулевого масштаба 3D-переворота
+      const scaleX = Math.cos(p.wobble);
+      this.ctx.scale(Math.abs(scaleX) < 0.01 ? 0.01 : scaleX, 1);
 
       this.ctx.beginPath();
-      // ფურცლის ფორმის ხატვა ბეზიეს მრუდებით
       this.ctx.moveTo(0, -p.size);
       this.ctx.bezierCurveTo(p.size / 2, -p.size, p.size, -p.size / 3, p.size / 2, p.size);
       this.ctx.bezierCurveTo(0, p.size * 0.7, -p.size / 2, p.size, -p.size / 2, p.size / 3);
@@ -165,8 +181,6 @@ class SakuraEngine {
 
       this.ctx.fillStyle = grad;
       this.ctx.globalAlpha = p.opacity;
-      this.ctx.shadowColor = '#fb7185';
-      this.ctx.shadowBlur = 4;
       this.ctx.fill();
       this.ctx.restore();
     }
